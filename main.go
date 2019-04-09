@@ -2,13 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net"
-	"os"
 )
 
 func main() {
-	conn, err := net.Dial("udp", "172.20.10.1:53")
+	conn, err := net.Dial("udp", "103.5.140.1:53")
 	defer conn.Close()
 	if err != nil {
 		panic(err)
@@ -18,27 +16,18 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	io.Copy(os.Stdout, conn)
-
-	// Headerは24byte
-	headBuffer := make([]byte, 24)
-	_, err = conn.Read(headBuffer)
+	buffer := make([]byte, 1500)
+	length, err := conn.Read(buffer)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("head:%X", headBuffer)
-	// Questionは40byte
-	questionBuffer := make([]byte, 40)
-	_, err = conn.Read(questionBuffer)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// Answerは32byte
-	answerBuffer := make([]byte, 32)
-	_, err = conn.Read(answerBuffer)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("%X", answerBuffer)
+	packet := buffer[:length]
+	fmt.Printf("%X\n", packet)
+	// Headerは12byte
+	fmt.Printf("%X\n", packet[:12])
+	// Questionは20byte
+	fmt.Printf("%X\n", packet[12:12+20])
+	// Answerは16byte
+	fmt.Printf("%X\n", packet[12+20:12+20+16])
 
 }
