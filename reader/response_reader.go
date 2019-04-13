@@ -15,6 +15,9 @@ type ResponseReader struct {
 	queryLength int
 	response    []byte
 	header      []byte
+	aEnd        int
+	nsEnd       int
+	addEnd      int
 	aRecord     uint16
 	nsRecord    uint16
 	addRecord   uint16
@@ -57,4 +60,38 @@ func (r *ResponseReader) ReadHeader() error {
 	r.addRecord = binary.BigEndian.Uint16(addCount)
 	current += 2
 	return nil
+}
+
+func (r *ResponseReader) ReadARecord() {
+	var current int
+	current += headSize + len(r.query)
+	offset := r.response[current : current+2]
+	fmt.Println(offset)
+	current += 2
+
+	resourceType := r.response[current : current+2]
+	fmt.Printf("resourceType: %X\n", resourceType)
+	current += 2
+
+	classType := r.response[current : current+2]
+	fmt.Printf("class: %X\n", classType)
+	current += 2
+
+	ttl := r.response[current : current+4]
+	fmt.Printf("ttl: %d\n", binary.BigEndian.Uint16(ttl))
+	current += 4
+
+	length := r.response[current : current+2]
+	fmt.Printf("length: %d byte\n", binary.BigEndian.Uint16(length))
+	intLength := int(binary.BigEndian.Uint16(length))
+	current += 2
+
+	answer := r.response[current : current+intLength]
+	if intLength == 4 {
+		a := int(answer[0])
+		b := int(answer[1])
+		c := int(answer[2])
+		d := int(answer[3])
+		fmt.Printf("ipAddress: %d.%d.%d.%d\n", a, b, c, d)
+	}
 }
